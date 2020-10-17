@@ -179,7 +179,7 @@
     
     <span class="post-meta mr-2">
       <i class="iconfont icon-chart"></i>
-      516 字
+      524 字
     </span>
   
 
@@ -258,7 +258,9 @@ git init --bare hexo.git
 <p>然后在新建一个post-receive，写入</p>
 <pre><code class="hljs bash"><span class="hljs-meta">#!/bin/sh</span>
 <span class="hljs-comment"># 前面的/blog/hexo与nginx配置挂载的目录一致</span>
-git --work-tree=/blog/hexo --git-dir=/blog/hexo.git checkout -f</code></pre>
+git --work-tree=~/blog/hexo --git-dir=~/blog/hexo.git checkout -f</code></pre>
+<p>赋予权限</p>
+<pre><code class="hljs bash">chmod 777 post-receive</code></pre>
 
 <p>nginx配置<br>在/etc/nginx/sites-enabled/defaulrt写入</p>
 <pre><code class="hljs conf">server &#123;
