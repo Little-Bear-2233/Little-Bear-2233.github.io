@@ -179,7 +179,7 @@
     
     <span class="post-meta mr-2">
       <i class="iconfont icon-chart"></i>
-      522 字
+      516 字
     </span>
   
 
@@ -260,10 +260,10 @@ git init --bare hexo.git
 <span class="hljs-comment"># 前面的/blog/hexo与nginx配置挂载的目录一致</span>
 git --work-tree=/blog/hexo --git-dir=/blog/hexo.git checkout -f</code></pre>
 
-<p>nginx配置<br>在/etc/nginx/sites-enabled下新建一个hexo文件，写入</p>
+<p>nginx配置<br>在/etc/nginx/sites-enabled/defaulrt写入</p>
 <pre><code class="hljs conf">server &#123;
  listen  80; #再写一个443
- root   &#x2F;www&#x2F;hexo; # 这里的意思是挂载&#x2F;www&#x2F;hexo目录
+ root   &#x2F;blog&#x2F;hexo; # 这里的意思是挂载&#x2F;blog&#x2F;hexo目录
 
  location &#x2F; &#123;
       index  index.html index.htm;
