@@ -179,7 +179,7 @@
     
     <span class="post-meta mr-2">
       <i class="iconfont icon-chart"></i>
-      524 字
+      522 字
     </span>
   
 
@@ -252,8 +252,8 @@ sysv-rc-conf nginx on</code></pre>
 <pre><code class="hljs bash"><span class="hljs-comment"># 随便在哪里创建都可以</span>
 <span class="hljs-built_in">cd</span> /blog
 <span class="hljs-comment"># 初始化一个仓库 </span>
-git init --bare hexo.git 
-<span class="hljs-built_in">cd</span> /hexo.git/hooks
+git init --bare .git 
+<span class="hljs-built_in">cd</span> /.git/hooks
 <span class="hljs-comment">#这个文件中的脚本会监听这个git的仓库的每一次push上来的事件，push到这个仓库一次，里面的脚本就执行一次</span></code></pre>
 <p>然后在新建一个post-receive，写入</p>
 <pre><code class="hljs bash"><span class="hljs-meta">#!/bin/sh</span>
