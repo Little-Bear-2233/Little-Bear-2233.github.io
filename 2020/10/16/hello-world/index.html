@@ -177,7 +177,7 @@
     
     <span class="post-meta mr-2">
       <i class="iconfont icon-chart"></i>
-      522 字
+      713 字
     </span>
   
 
@@ -187,7 +187,7 @@
       <i class="iconfont icon-clock-fill"></i>
       
       
-      6
+      9
        分钟
     </span>
   
@@ -240,42 +240,61 @@ hexo server ##启动服务，本地加载
 hexo deploy ##部署网站
 hexo clean ##清空缓存文件</code></pre>
 
-<p>然后是<a target="_blank" rel="noopener" href="https://hexo.fluid-dev.com/docs/guide/">fluid</a>这是它的官方手册其中有很多详细的介绍，我只是进行了初步的改动，之后再打算详细的设置一下，比如统计啊，还有各个页面的壁纸高度不对（看着是真的别扭）</p>
-<h4 id="服务器设置"><a href="#服务器设置" class="headerlink" title="服务器设置"></a>服务器设置</h4><p>首先安装nginx，并配置开机自启</p>
-<pre><code class="hljs bash">apt-get install nginx
-apt install sysv-rc-conf
-sysv-rc-conf nginx on</code></pre>
+<p>然后是<a target="_blank" rel="noopener" href="https://hexo.fluid-dev.com/docs/guide/">fluid</a>这是它的官方手册其中有很多详细的介绍，我只是进行了初步的改动，之后再打算详细的设置一下，比如统计啊，还有各个页面的壁纸高度不对（看着是真的别扭）还有在设置好域名之前，不要使用开那个强制https，会取不到资源</p>
+<h4 id="服务器设置"><a href="#服务器设置" class="headerlink" title="服务器设置"></a>服务器设置</h4><p>首先安装nginx，最好采用编译安装</p>
+<pre><code class="hljs bash">wget http://nginx.org/download/nginx-1.18.0.tar.gz
+tar xzvf nginx-1.15.2.tar.gz
+<span class="hljs-built_in">cd</span> nginx-1.15.2
+./configure // 如果后面还想要配置 SSL 协议，就执行后面一句！
+./configure --prefix=/usr/<span class="hljs-built_in">local</span>/nginx --with-http_stub_status_module --with-http_ssl_module         --with-file-aio --with-http_realip_module
+make &amp;&amp; make install</code></pre>
 
-<p>然后配置远程仓库</p>
-<pre><code class="hljs bash"><span class="hljs-comment"># 随便在哪里创建都可以</span>
-<span class="hljs-built_in">cd</span> /blog
-<span class="hljs-comment"># 初始化一个仓库 </span>
-git init --bare .git 
-<span class="hljs-built_in">cd</span> /.git/hooks
-<span class="hljs-comment">#这个文件中的脚本会监听这个git的仓库的每一次push上来的事件，push到这个仓库一次，里面的脚本就执行一次</span></code></pre>
-<p>然后在新建一个post-receive，写入</p>
+<p>配置远程仓库</p>
+<pre><code class="hljs bash">useradd git
+passwd git // 设置密码
+su git // 这步很重要，不切换用户后面会很麻烦
+<span class="hljs-built_in">cd</span> /home/git/
+mkdir blog // 项目存在的真实目录
+mkdir repos &amp;&amp; <span class="hljs-built_in">cd</span> repos
+git init --bare blog.git // 创建一个裸露的仓库
+<span class="hljs-built_in">cd</span> blog.git/hooks
+vi post-receive // 创建 hook 钩子函数，输入了内容如下</code></pre>
+<p>然后在post-receive写入</p>
 <pre><code class="hljs bash"><span class="hljs-meta">#!/bin/sh</span>
-<span class="hljs-comment"># 前面的/blog/hexo与nginx配置挂载的目录一致</span>
-git --work-tree=~/blog/hexo --git-dir=~/blog/hexo.git checkout -f</code></pre>
+git --work-tree=/home/git/blog --git-dir=/home/git/repos/hexo.git checkout -f</code></pre>
 <p>赋予权限</p>
-<pre><code class="hljs bash">chmod 777 post-receive</code></pre>
+<pre><code class="hljs bash">chmod +x post-receive
+<span class="hljs-built_in">exit</span> // 退出到 root 登录
+chown -R git:git /home/git/repos/blog.git // 添加权限</code></pre>
 
-<p>nginx配置<br>在/etc/nginx/sites-enabled/defaulrt写入</p>
-<pre><code class="hljs conf">server &#123;
- listen  80; #再写一个443
- root   &#x2F;blog&#x2F;hexo; # 这里的意思是挂载&#x2F;blog&#x2F;hexo目录
+<p>可以测试下仓库可以使用了没有</p>
+<pre><code class="hljs bash">git <span class="hljs-built_in">clone</span> git@server_ip:/home/git/repos/blog.git</code></pre>
 
- location &#x2F; &#123;
-      index  index.html index.htm;
- &#125;
-&#125;</code></pre>
+<p>安全起见关闭git的shell登录权限</p>
+<pre><code class="hljs bash">cat /etc/shells // 查看 git-shell 是否在登录方式里面
+<span class="hljs-built_in">which</span> git-shell // 查看是否安装
+vi /etc/shells
+添加上2步显示出来的路劲，通常在 /usr/bin/git-shell</code></pre>
+<p>修改/etc/passwd中的权限</p>
+<pre><code class="hljs bash">// 将原来的
+git:x:1000:1000::/home/git:/bin/bash
 
-<p>配置本地hexo的_config.yml</p>
+// 修改为
+git:x:1000:1000:,,,:/home/git:/usr/bin/git-shell</code></pre>
+
+<p>调整nginx的配置文件</p>
+<pre><code class="hljs bash">nginx -s stop // 先停止nginx
+<span class="hljs-built_in">cd</span> /usr/<span class="hljs-built_in">local</span>/nginx/conf
+vi nginx.conf
+修改 root 解析路径 /home/git/blog
+同时将 user 改为 root 不然nginx无法访问 
+nginx -s reload</code></pre>
+
+<p>_config.yml 推送设置</p>
 <pre><code class="hljs yml"><span class="hljs-attr">deploy:</span>
 <span class="hljs-attr">type:</span> <span class="hljs-string">git</span> 
-<span class="hljs-attr">repo:</span> <span class="hljs-string">用户名@ip地址:/www/hexo.git</span>
+<span class="hljs-attr">repo:</span> <span class="hljs-string">git@server_ip:~/repos/blog.git</span>
 <span class="hljs-attr">branch:</span> <span class="hljs-string">master</span></code></pre>
-<p>然后尝试推送就好了</p>
 
             </div>
             <hr>
